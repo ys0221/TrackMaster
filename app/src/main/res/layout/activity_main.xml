@@ -1,0 +1,45 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/startStationInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="출발역 번호 입력"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/endStationInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="도착역 번호 입력"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/calculateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="경로 계산" />
+
+    <!-- ScrollView로 TextView를 감싸기 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="결과가 여기에 표시됩니다"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:padding="8dp" />
+
+    </ScrollView>
+
+</LinearLayout>
