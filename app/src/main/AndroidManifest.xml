@@ -18,8 +18,14 @@
             </intent-filter>
         </activity>
 
-        <!-- 새롭게 추가한 ResultActivity -->
+        <!-- ResultActivity 등록 -->
         <activity android:name=".ResultActivity" />
+
+        <!-- NearbySearchActivity 등록 -->
+        <activity android:name=".NearbySearchActivity" />
+
+        <!-- NearbyResultActivity 등록 -->
+        <activity android:name=".NearbyResultActivity" />
 
     </application>
 

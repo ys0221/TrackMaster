@@ -10,19 +10,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="출발역 번호 입력"
-        android:inputType="text" />
+        android:inputType="number" />
 
     <EditText
         android:id="@+id/endStationInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="도착역 번호 입력"
-        android:inputType="text" />
+        android:inputType="number" />
 
     <Button
-        android:id="@+id/searchButton"
+        android:id="@+id/calculateButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="경로 검색" />
+        android:text="경로 계산" />
+
+    <!-- ScrollView로 TextView를 감싸기 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"/>
 
 </LinearLayout>
