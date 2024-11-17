@@ -288,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         routeTimes[start] = listOf()
 
         val priorityQueue = PriorityQueue<Triple<String, Int, Int>>(compareBy<Triple<String, Int, Int>> { it.third }.thenBy { costs.getValue(it.first) })
-        priorityQueue.add(Triple(start, 0, 0))  // (station, cost, transfers)
+        priorityQueue.add(Triple(start, 0, 0))  // (station, cost, transfersg)
 
         while (priorityQueue.isNotEmpty()) {
             val (currentStation, currentCost, currentTransfers) = priorityQueue.poll()
