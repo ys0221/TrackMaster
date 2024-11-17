@@ -3,10 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/white"
+    android:gravity="center_horizontal">
 
-    <!-- 상단 버튼 영역 -->
+    <!-- 상단 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,54 +17,41 @@
 
         <Button
             android:id="@+id/minTransferButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="최소환승"
-            android:backgroundTint="#CCCCCC"
-            android:textColor="#000000"
-            android:layout_margin="4dp" />
+            android:layout_margin="4dp"
+            android:text="최소환승" />
 
         <Button
             android:id="@+id/minTimeButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="최소시간"
-            android:backgroundTint="#CCCCCC"
-            android:textColor="#000000"
-            android:layout_margin="4dp" />
+            android:layout_margin="4dp"
+            android:text="최소시간" />
 
         <Button
             android:id="@+id/minCostButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="최소비용"
-            android:backgroundTint="#CCCCCC"
-            android:textColor="#000000"
-            android:layout_margin="4dp" />
+            android:layout_margin="4dp"
+            android:text="최소비용" />
     </LinearLayout>
 
-    <!-- 결과 출력 영역 -->
+    <!-- 검색 입력 필드 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginBottom="16dp">
+        android:gravity="center">
 
-        <TextView
-            android:id="@+id/database"
+        <LinearLayout
+            android:id="@+id/resultLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="결과가 여기에 표시됩니다"
-            android:textSize="16sp"
-            android:textColor="@android:color/black"
-            android:padding="8dp" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical" />
     </ScrollView>
 
-    <!-- 입력 및 검색 버튼 -->
     <EditText
         android:id="@+id/startStationInput"
         android:layout_width="match_parent"
@@ -80,13 +68,15 @@
         android:inputType="text"
         android:layout_marginBottom="16dp" />
 
+    <!-- 경로 검색 버튼 -->
     <Button
         android:id="@+id/calculateButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="경로 검색"
+        android:layout_marginBottom="16dp"
         android:backgroundTint="#344485"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:padding="12dp" />
+        android:text="경로 검색"
+        android:textColor="#FFFFFF" />
+
+    <!-- 동적 결과 표시 영역 -->
 </LinearLayout>

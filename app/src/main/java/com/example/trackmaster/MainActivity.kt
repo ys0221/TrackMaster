@@ -2,121 +2,236 @@ package com.example.trackmaster
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 
-// 역 데이터 클래스
 data class StationData(val 출발역: String, val 도착역: String, val 시간: Int, val 거리: Int, val 비용: Int)
-
-// 경로 정보 클래스
-data class Path(val station: String, val totalCost: Int, val totalTransfers: Int, val route: List<String>, val distances: List<Int>, val costs: List<Int>, val times: List<Int>)
-
-// 새로운 Edge 데이터 클래스 정의
+data class Path(
+    val station: String,
+    val totalCost: Int,
+    val totalTransfers: Int,
+    val route: List<String>,
+    val distances: List<Int>,
+    val costs: List<Int>,
+    val times: List<Int>
+)
 data class Edge(val destination: String, val time: Int, val distance: Int, val cost: Int)
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var resultLayout: LinearLayout
+
+    private val lineColors = mapOf(
+        1 to "#FF5733", // 1호선: 빨간색
+        2 to "#33FF57", // 2호선: 초록색
+        3 to "#3357FF", // 3호선: 파란색
+        4 to "#FFC300", // 4호선: 노란색
+        5 to "#900C3F", // 5호선: 자주색
+        6 to "#581845", // 6호선: 보라색
+        7 to "#DAF7A6", // 7호선: 연두색
+        8 to "#C70039", // 8호선: 진한 빨간색
+        9 to "#1C2833"  // 9호선: 진한 파란색
+    )
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // View 연결
         val startStationInput = findViewById<EditText>(R.id.startStationInput)
         val endStationInput = findViewById<EditText>(R.id.endStationInput)
         val calculateButton = findViewById<Button>(R.id.calculateButton)
-        val resultText = findViewById<TextView>(R.id.database)
+        resultLayout = findViewById(R.id.resultLayout)
+
+        val minTransferButton = findViewById<Button>(R.id.minTransferButton)
+        val minTimeButton = findViewById<Button>(R.id.minTimeButton)
+        val minCostButton = findViewById<Button>(R.id.minCostButton)
+
+        val defaultColor = Color.parseColor("#CCCCCC")
+        val clickedColor = Color.YELLOW
 
         val stationList = readCSV(this)
         val graph = buildGraph(stationList)
 
+        // 경로 검색 버튼 클릭
         calculateButton.setOnClickListener {
             val startStation = startStationInput.text.toString()
             val endStation = endStationInput.text.toString()
 
             if (startStation.isBlank() || endStation.isBlank()) {
-                resultText.text = "출발역과 도착역을 입력하세요."
+                displayErrorMessage("출발역과 도착역을 입력하세요.")
                 return@setOnClickListener
             }
 
+            resetButtonColors(minTransferButton, minTimeButton, minCostButton)
+            clearResults()
+
+            // 경로 계산
             val minTransferResult = findLowestCostPathWithTransfers(graph, startStation, endStation)
             val minCostResult = findLowestCostPath(graph, startStation, endStation)
             val minTimeResult = findLowestTimePath(graph, startStation, endStation)
 
-            if (minTransferResult != null && minCostResult != null && minTimeResult != null) {
-                // 최소 환승 경로 정보 출력
-                val minTransferOutput = """
-            최소 환승 경로:
-            경로: ${minTransferResult.route.joinToString(" -> ")}
-            비용: ${minTransferResult.costs.sum()} 원
-            거리: ${minTransferResult.distances.sum()} m
-            소요 시간: ${minTransferResult.times.sum()} 초
+            // 결과 동적 출력
+            if (minTransferResult != null) {
+                addRouteToLayout("최소 환승 경로", minTransferResult.route)
+                //displayDetailedResult("최소 환승 경로", minTransferResult)
+            }
+            if (minCostResult != null) {
+                addRouteToLayout("최소 비용 경로", minCostResult.route)
+            }
+            if (minTimeResult != null) {
+                addRouteToLayout("최소 시간 경로", minTimeResult.route)
+            }
+        }
 
-            혼잡도:
-            ${calculateCongestion(minTransferResult)}
-        """.trimIndent()
+        // 최소 환승 버튼
+        minTransferButton.setOnClickListener {
+            resetButtonColors(minTransferButton, minTimeButton, minCostButton)
+            minTransferButton.backgroundTintList = ColorStateList.valueOf(clickedColor)
+            handleSpecificCondition(graph, startStationInput, endStationInput, "최소 환승 경로") { g, s, e ->
+                findLowestCostPathWithTransfers(g, s, e)
+            }
+        }
 
-                // 최소 비용 경로 정보 출력
-                val minCostOutput = """
-            최소 비용 경로:
-            경로: ${minCostResult.route.joinToString(" -> ")}
-            비용: ${minCostResult.totalCost} 원
-            거리: ${minCostResult.distances.sum()} m
-            소요 시간: ${minCostResult.times.sum()} 초
+        // 최소 시간 버튼
+        minTimeButton.setOnClickListener {
+            resetButtonColors(minTransferButton, minTimeButton, minCostButton)
+            minTimeButton.backgroundTintList = ColorStateList.valueOf(clickedColor)
+            handleSpecificCondition(graph, startStationInput, endStationInput, "최소 시간 경로") { g, s, e ->
+                findLowestTimePath(g, s, e)
+            }
+        }
 
-            혼잡도:
-            ${calculateCongestion(minCostResult)}
-        """.trimIndent()
-
-                // 최소 시간 경로 정보 출력
-                val minTimeOutput = """
-            최소 시간 경로:
-            경로: ${minTimeResult.route.joinToString(" -> ")}
-            비용: ${minTimeResult.totalCost} 원
-            거리: ${minTimeResult.distances.sum()} m
-            소요 시간: ${minTimeResult.times.sum()} 초
-
-            혼잡도:
-            ${calculateCongestion(minTimeResult)}
-        """.trimIndent()
-
-                // 결과를 TextView에 설정
-                resultText.text = """
-            $minTransferOutput
-
-            $minCostOutput
-
-            $minTimeOutput
-        """.trimIndent()
-            } else {
-                resultText.text = "경로를 찾을 수 없습니다."
+        // 최소 비용 버튼
+        minCostButton.setOnClickListener {
+            resetButtonColors(minTransferButton, minTimeButton, minCostButton)
+            minCostButton.backgroundTintList = ColorStateList.valueOf(clickedColor)
+            handleSpecificCondition(graph, startStationInput, endStationInput, "최소 비용 경로") { g, s, e ->
+                findLowestCostPath(g, s, e)
             }
         }
     }
 
-        private fun calculateCongestion(path: Path): String {
-        val lineCongestions = mutableMapOf<String, MutableList<Int>>()
+    // 경로를 UI에 추가
+    private fun addRouteToLayout(label: String, route: List<String>) {
+        val lineNumberSet = route.map { getLineNumber(it) }.distinct()
 
-        path.route.forEach { station ->
-            val line = station.substring(0, 1) // 역 이름의 첫 글자가 호선 번호라고 가정
-            val congestion = Random().nextInt(100) + 1 // 1부터 100 사이의 랜덤 혼잡도
-            lineCongestions.computeIfAbsent(line) { mutableListOf() }.add(congestion)
+        // 호선 TextView
+        val lineTextView = TextView(this)
+        lineTextView.text = "$label: ${lineNumberSet.joinToString(" -> ") { "${it}호선" }}"
+        lineTextView.setTextColor(Color.BLACK)
+        lineTextView.textSize = 16f
+        resultLayout.addView(lineTextView)
+
+        // 경로 TextView
+        val routeTextView = TextView(this)
+        routeTextView.text = formatRouteWithColors(route)
+        routeTextView.visibility = TextView.GONE // 초기에는 숨김
+        resultLayout.addView(routeTextView)
+
+        // 클릭 이벤트로 경로 토글
+        lineTextView.setOnClickListener {
+            routeTextView.visibility =
+                if (routeTextView.visibility == TextView.GONE) TextView.VISIBLE else TextView.GONE
+        }
+    }
+    // 특정 조건에 대한 결과 출력
+    private fun handleSpecificCondition(
+        graph: Map<String, MutableList<Edge>>,
+        startStationInput: EditText,
+        endStationInput: EditText,
+        label: String,
+        pathFindingFunction: (Map<String, MutableList<Edge>>, String, String) -> Path?
+    ) {
+        val startStation = startStationInput.text.toString()
+        val endStation = endStationInput.text.toString()
+
+        if (startStation.isBlank() || endStation.isBlank()) {
+            displayErrorMessage("출발역과 도착역을 입력하세요.")
+            return
         }
 
-        // 호선별 평균 혼잡도 계산
-        val averageCongestions = lineCongestions.mapValues { (_, congestions) ->
-            congestions.sum() / congestions.size
-        }
+        clearResults()
+        val result = pathFindingFunction(graph, startStation, endStation)
 
-        // 결과 문자열 생성
-        return averageCongestions.entries.joinToString("\n") { "${it.key}호선 평균 혼잡도: ${it.value}%" }
+        if (result != null) {
+            displayDetailedResult(label, result)
+        } else {
+            displayErrorMessage("$label 찾을 수 없습니다.")
+        }
+    }
+
+    // 결과와 세부 정보 출력
+    private fun displayDetailedResult(label: String, result: Path) {
+        val textView = TextView(this)
+        textView.text = """
+            $label:
+            경로: ${formatRouteWithColors(result.route)}
+            비용: ${result.costs.sum()} 원
+            거리: ${result.distances.sum()} m
+            소요 시간: ${result.times.sum()} 초
+        """.trimIndent()
+        textView.setTextColor(Color.BLACK)
+        textView.textSize = 16f
+        resultLayout.addView(textView)
+    }
+
+    // 경로를 색상별로 포맷
+    private fun formatRouteWithColors(route: List<String>): SpannableStringBuilder {
+        val builder = SpannableStringBuilder()
+        for ((index, station) in route.withIndex()) {
+            val lineNumber = getLineNumber(station)
+            val color = lineColors[lineNumber] ?: "#000000"
+            val start = builder.length
+            builder.append(station)
+            val end = builder.length
+            builder.setSpan(
+                ForegroundColorSpan(Color.parseColor(color)),
+                start,
+                end,
+                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            if (index < route.size - 1) builder.append(" -> ")
+        }
+        return builder
+    }
+
+    // 에러 메시지 출력
+    private fun displayErrorMessage(message: String) {
+        clearResults()
+        val errorTextView = TextView(this)
+        errorTextView.text = message
+        errorTextView.setTextColor(Color.RED)
+        errorTextView.textSize = 16f
+        resultLayout.addView(errorTextView)
+    }
+
+    // 결과 초기화
+    private fun clearResults() {
+        resultLayout.removeAllViews()
+    }
+
+    // 버튼 색상 초기화
+    private fun resetButtonColors(vararg buttons: Button) {
+        for (button in buttons) {
+            button.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#CCCCCC"))
+        }
+    }
+
+    private fun getLineNumber(stationCode: String): Int {
+        return stationCode.substring(0, 1).toInt()
     }
 
     private fun readCSV(context: Context): List<StationData> {
